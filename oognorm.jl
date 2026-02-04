@@ -18,15 +18,19 @@ function oog(P,Ω::Vector{<:Real};ϵr=0, a=0)
     return [oog(P,ω;ϵr,a) for ω in Ω] 
 end
 
-function oog(ω,A,B,Cp,Dp,Cr,Dr;ϵr=0, a=0)
+function oog(ω,A,B,Cp,Dp,Cr,Dr;ϵr=0, a=0, type=:naive)
     if(ω ≠ Inf)
         M = ((im*ω+a)*I-A)\B
         Tp, Tr = Cp*M+Dp, Cr*M+Dr
     else
         Tp, Tr = Dp, Dr
     end
-    λ = size(B,2) == 1 ? Tp'*Tp/(Tr'*Tr+ϵr*I) : eigvals!(Tp'*Tp,Tr'*Tr+ϵr*I);
-    return real(sqrt(λ[end]))
+    if(type==:naive)
+        λ = size(B,2) == 1 ? Tp'*Tp/(Tr'*Tr+ϵr*I) : eigvals!(Tp'*Tp,Tr'*Tr+ϵr*I);
+        return real(sqrt(λ[end]))
+    else
+        return maximum(svdvals!(Tp,[Tr;sqrt(ϵr)I]))
+    end
 end
 
 function oognorm(P;ϵr=1e-12,tolimag=1e-5,ϵ=1e-5,a=0, max_iter=20)
